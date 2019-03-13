@@ -13,11 +13,14 @@ import (
 )
 
 type Report struct {
-	NumFailedTests int
-	NumPassedTests int
-	NumTotalTests  int
-	Success        bool
-	TestResults    []*TestResult
+	NumFailedTests      int
+	NumPassedTests      int
+	NumTotalTests       int
+	NumFailedTestSuites int
+	NumPassedTestSuites int
+	NumTotalTestSuites  int
+	Success             bool
+	TestResults         []*TestResult
 }
 
 type TestResult struct {
@@ -94,27 +97,45 @@ func handlePush(ctx context.Context, client *github.Client, event *github.PushEv
 
 		path := strings.TrimPrefix(t.FilePath, workspacePath)
 
-		for _, a := range t.AssertionResults {
-			if a.Status == "passed" {
-				continue
-			}
+		if len(t.AssertionResults) > 0 {
+			for _, a := range t.AssertionResults {
+				if a.Status == "passed" {
+					continue
+				}
 
+				annotations = append(annotations, &github.CheckRunAnnotation{
+					Path:            github.String(path),
+					StartLine:       github.Int(a.Location.Line),
+					EndLine:         github.Int(a.Location.Line),
+					AnnotationLevel: github.String("failure"),
+					Title:           github.String(a.FullName),
+					Message:         github.String(strings.Join(a.FailureMessages, "\n\n")),
+				})
+			}
+		} else {
+			// usually the case for failed test suites
 			annotations = append(annotations, &github.CheckRunAnnotation{
 				Path:            github.String(path),
-				StartLine:       github.Int(a.Location.Line),
-				EndLine:         github.Int(a.Location.Line),
+				StartLine:       github.Int(1),
+				EndLine:         github.Int(1),
 				AnnotationLevel: github.String("failure"),
-				Title:           github.String(a.FullName),
-				Message:         github.String(strings.Join(a.FailureMessages, "\n\n")),
+				Title:           github.String("Test Suite Error"),
+				Message:         github.String(t.Message),
 			})
 		}
 	}
 
 	summary := fmt.Sprintf(
-		"%d failed, %d passed, %d total",
+		"Test Suites: %d failed, %d passed, %d total\n",
 		report.NumFailedTests,
 		report.NumPassedTests,
 		report.NumTotalTests,
+	)
+	summary += fmt.Sprintf(
+		"Tests: %d failed, %d passed, %d total",
+		report.NumFailedTestSuites,
+		report.NumPassedTestSuites,
+		report.NumTotalTestSuites,
 	)
 
 	// add annotations in #50 chunks
