@@ -40,7 +40,7 @@ action "Jest" {
 To run Jest, either use the published docker image ...
 
 ```hcl
-action "Eslint" {
+action "Jest" {
   uses = "docker://rkusa/jest-action:latest"
   secrets = ["GITHUB_TOKEN"]
   args = ""
@@ -50,7 +50,7 @@ action "Eslint" {
 ... or the Github repo:
 
 ```hcl
-action "Eslint" {
+action "Jest" {
   uses = "rkusa/jest-action@master"
   secrets = ["GITHUB_TOKEN"]
   args = ""
