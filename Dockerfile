@@ -16,10 +16,10 @@ LABEL repository="https://github.com/rkusa/jest-action"
 LABEL homepage="https://github.com/rkusa/jest-action"
 LABEL maintainer="Markus Ast <m@rkusa.st>"
 
-LABEL com.github.actions.name="Jest"
+LABEL com.github.actions.name="Annotated Jest"
 LABEL com.github.actions.description="Execute jest tests and test failure annotations"
 LABEL com.github.actions.icon="check"
-LABEL com.github.actions.color="#0ec214"
+LABEL com.github.actions.color="green"
 
 ENV JEST_CMD ./node_modules/.bin/jest
 COPY entrypoint.sh /entrypoint.sh
