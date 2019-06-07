@@ -103,6 +103,10 @@ func handlePush(ctx context.Context, client *github.Client, event *github.PushEv
 					continue
 				}
 
+				if len(a.FailureMessages) == 0 {
+					a.FailureMessages = append(a.FailureMessages, a.FullName)
+				}
+
 				annotations = append(annotations, &github.CheckRunAnnotation{
 					Path:            github.String(path),
 					StartLine:       github.Int(a.Location.Line),
@@ -146,14 +150,16 @@ func handlePush(ctx context.Context, client *github.Client, event *github.PushEv
 			end = len(annotations)
 		}
 
+		output := &github.CheckRunOutput{
+			Title:       github.String("Result"),
+			Summary:     github.String(summary),
+			Annotations: annotations[i:end],
+		}
+
 		_, _, err = client.Checks.UpdateCheckRun(ctx, owner, repoName, checkRun.GetID(), github.UpdateCheckRunOptions{
 			Name:    checkName,
 			HeadSHA: github.String(head),
-			Output: &github.CheckRunOutput{
-				Title:       github.String("Result"),
-				Summary:     github.String(summary),
-				Annotations: annotations[i:end],
-			},
+			Output:  output,
 		})
 		if err != nil {
 			return err
